@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   postgres:
@@ -17,6 +17,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - property_network
 
   redis:
     image: redis:latest
@@ -30,7 +32,38 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - property_network
+
+  web:
+    build: .
+    container_name: property_listings_web
+    command: /app/entrypoint.sh
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_DB=property_listings
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres123
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DEBUG=True
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - property_network
 
 volumes:
   postgres_data:
   redis_data:
+
+networks:
+  property_network:
+    driver: bridge
