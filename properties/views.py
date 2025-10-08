@@ -35,6 +35,7 @@ from django.shortcuts import render
 from django.views.decorators.cache import cache_page
 from django.http import JsonResponse
 from .models import Property
+from .utils import get_redis_cache_metrics
 
 # Cache for 15 minutes (60 seconds * 15 = 900 seconds)
 @cache_page(60 * 15)
@@ -61,3 +62,25 @@ def property_list(request):
         'count': len(properties_data),
         'properties': properties_data
     }, safe=False)
+
+def cache_metrics(request):
+    """
+    View to display Redis cache metrics.
+    GET /properties/metrics/
+    """
+    metrics = get_redis_cache_metrics()
+    
+    return JsonResponse({
+        'status': 'success',
+        'metrics': metrics,
+        'description': {
+            'keyspace_hits': 'Number of successful key lookups',
+            'keyspace_misses': 'Number of failed key lookups',
+            'hit_ratio': 'Cache efficiency (0.0 to 1.0)',
+            'hit_ratio_percentage': 'Cache efficiency as percentage',
+            'total_requests': 'Total cache requests',
+            'cache_keys': 'Number of keys in cache',
+            'used_memory': 'Memory used by Redis',
+            'connected_clients': 'Number of connected clients'
+        }
+    })
